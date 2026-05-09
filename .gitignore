@@ -1,11 +1,26 @@
-spongecake-autoreport.code-workspace
-Untitled.ipynb
-Untitled1.ipynb
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.DS_Store
+build/
+dist/
+*.egg
+
+# Run outputs (never committed)
+reports/
+state/
+logs/
+*.log
+
+# IDE / scratch
+.vscode/
+.idea/
+.ipynb_checkpoints/
+*.code-workspace
+Untitled*.ipynb
 Spongecake_Report.ipynb
-/.ipynb_checkpoints
-/.vscode
-/logs
-/__pycache__
-__pycache__/html.cpython-37.pyc
-__pycache__/spongecake_autoreport.cpython-37.pyc
-.vscode/settings.json

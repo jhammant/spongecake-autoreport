@@ -1,121 +1,147 @@
 # Spongecake Autoreport
 
-- [Introduction](#introduction)
-- [Example](#example)
-- [Instructions](#instructions)
-  - [Pre-requisities](#pre-requisities)
-  - [Configuring the Watchlist](#configuring-the-watchlist)
-  - [Running Spongecake Autoreport](#running-spongecake-autoreport)
-- [Running as a Docker Container](#running-as-a-docker-container)
-- [Appendix A - `emailer.py`](#appendix-a---emailerpy)
+Daily research report for an LSE-stock watchlist: technical charts, indicators,
+30-day forecasts, balance/income tables, LLM commentary, and a diff against
+yesterday — rendered as both a PDF and an interactive HTML page.
 
-## Introduction
+This is a fork of [chris-j-akers/spongecake-autoreport][upstream]
+(last upstream commit June 2022) modernized for 2026:
+- the `pandas_datareader` Yahoo backend (dead since Yahoo killed the endpoint)
+  is replaced with `yfinance`;
+- Investors-Chronicle scraping (rotted) is replaced with `yfinance` fundamentals;
+- the package is restructured under `src/spongecake_autoreport/` with a
+  `spongecake-report` console entry, `pyproject.toml`, and a smoke test;
+- the report grew an indicator suite (RSI, Bollinger, ATR, OBV…),
+  signal extraction, a composite trend score, per-strategy backtests,
+  Plotly interactive HTML, day-over-day diff, Discord/Pushover notifiers,
+  and a viewer Flask app.
+- Forecasting can run as Monte Carlo locally, Chronos locally (on-host), or
+  routed to a Mac-side bridge over tailscale.
 
-Spongecake Autoreport will generate a PDF report of Technical Charts (Price/Volume, Stochastic Oscillator and Moving Average Convergence/Divergence) for a list of tradable instrument mnemonics (TIDMS) and provide some extra income and balance sheet data and a few fundamental calculations.
+[upstream]: https://github.com/chris-j-akers/spongecake-autoreport
 
-Note that, Spongecake Autoreport and Spongecake Financials have both only been used and tested with London Stock Exchange instruments.
+## Quick start (local Mac)
 
-## Example
+```bash
+# Clone your fork
+git clone git@github.com:jhammant/spongecake-autoreport.git
+cd spongecake-autoreport
 
-Below is an example of a chart generated for FDEV (Frontier Developments Plc).
+# System libs (WeasyPrint runtime)
+brew install cairo pango gdk-pixbuf libffi
 
-Charts are printed one per page. There is currently no limit to the number of charts that can be generated.
+# Python env (uv recommended; pip works too)
+uv venv
+uv pip install -e ".[dev]"
 
-![](readme_img/autoreport-example.png)
-
-
-## Instructions
-
-### Pre-requisities
-
-Spongecake Autoreport needs the following installed:
-
-* Python 3 & Pip
-* Spongecake-Financials ([https://github.com/chris-j-akers/spongecake-financials](https://github.com/chris-j-akers/spongecake-financials))
-* Pandas
-* pandas_datareader
-* requests
-* Matplotlib
-* Weasyprint
-
-By default, the program uses the `/tmp` directory to output it's reports.
-
-### Configuring the Watchlist
-
-A file called `watchlist` must exist in the directory of the repo and be populated in the format:
-
-`tidm|company name|description`
-
-Note fields are separated by `|` (pipe).
-
-`tidm` is the tradable instrument mnemonic of the company, `company name` is the name of the company and `description` is a brief free-text description of the company and what it does.
-
-e.g.
-
-```
-GAW|Games Workshop|Games Workshop Group PLC designs, manufactures and sells fantasy miniatures and related products.
-KWS|Keywords Studios|Keywords Studios Plc supplies localization and localization testing services. 
+# Edit watchlist.yaml as needed, then:
+spongecake-report --watchlist watchlist.yaml --tickers GAW --output ./reports
 ```
 
-Any line beginning `#` will be ignored.
+The report directory is `./reports/<YYYY-MM-DD>/` with `report.pdf`,
+`index.html`, per-stock `.html` files, and `signals.json`.
 
-An example file is included in the repo.
+## Configuration (env vars)
 
-### Running Spongecake Autoreport
+Create `.env` (or set in your shell / systemd EnvironmentFile):
 
-The program can be run with the following command:
+```bash
+# Forecasting
+FORECAST_MODE=mc                  # mc | chronos-local | chronos-remote
+CHRONOS_MODEL=amazon/chronos-t5-tiny
+CHRONOS_BRIDGE_URL=http://your-mac-tailscale:5003
+CHRONOS_BRIDGE_TOKEN=...
 
-`➜ python ./spongecake_autoreport.py`
+# LLM commentary (optional — gracefully skipped if unset)
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_MODEL=claude-sonnet-4-6
 
-Output should be similar to below, with the final line stating the location of the final report.
+# Notifiers (optional)
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+PUSHOVER_USER_KEY=...
+PUSHOVER_APP_TOKEN=...
 
+# Viewer
+VIEWER_AUTH=user:strongpass        # required when bound publicly
+VIEWER_BASE_URL=https://spongecake.hammant.io
 ```
-Getting data for TIDM FDEV
-Getting data for TIDM GAW
-Getting data for TIDM KWS
-Getting data for TIDM TM17
-Getting data for TIDM EMIS
-Getting data for TIDM SCT
-Getting data for TIDM SPX
-Getting data for TIDM KNOS
-Getting data for TIDM D4T4
-Getting data for TIDM PAY
-Getting data for TIDM IOM
-Getting data for TIDM TUNE
-Getting data for TIDM ZOO
-Getting data for TIDM CCC
-Report generated at: /tmp/0a3dd596-baf9-40e4-a60f-df7c96584d56_scautoreport/spongecake_2021_05_21.pdf
+
+## CLI reference
+
+```bash
+spongecake-report \
+  --watchlist watchlist.yaml \
+  --output ./reports \
+  --state ./state \
+  --tickers GAW,FDEV \              # optional — filter to subset
+  --horizon 30 \                    # forecast horizon in trading days
+  --history-days 365 \              # historical window per chart
+  --forecast chronos-remote \       # override FORECAST_MODE
+  --notify discord,pushover \       # fire notifiers on success
+  --diff                            # diff against latest prior run (default on)
 ```
-## Running as a Docker Container
 
-Spongecake Autoreport can be run as a container so you don't have to download and configure all the required libraries on your own host.
+Other entry points:
 
-At the moment, one limitation is that if you change the 'watchlist' config file you need to rebuild the image. The step which copies the 'watchlist' file over is one of the last steps in the Docker file, though, so it doesn't actually take that long to rebuild. This could obviously be fixed at some point with a volume attached to the repo directory.
+```bash
+spongecake-viewer --host 127.0.0.1 --port 8090 --reports ./reports
+spongecake-bridge --host 0.0.0.0 --port 5003          # Mac-side, requires [bridge,chronos]
+```
 
-The image is also quite large (800MB) as the libraries used have a lot of dependencies and it uses the Canonical Ubuntu image.
+## Watchlist format
 
-To build the Docker image run the following from the repo directory:
+`watchlist.yaml` is a YAML list. Each entry needs `tidm` + `name`. `description`
+is optional — the LLM commentary fills its own.
 
-`docker image build -t spongecake-autoreport .`
+```yaml
+- tidm: GAW
+  name: Games Workshop
+  sector: Consumer
+- tidm: FDEV
+  name: Frontier Developments
+  sector: Tech
+  description: Optional fallback when no LLM key is set
+```
 
-Spongecake-autoreport, by default, outputs reports to the `/tmp` directory. The Dockerfile configures a `/tmp` volume which must be mapped to a directory on the host using the `-v` switch when running the container. If not, the report will be inaccessible.
+A migrator from the legacy pipe-delimited format is included:
 
-For instance, to generate the report and store it in the host's own `/tmp` directory, run:
+```python
+from spongecake_autoreport.watchlist import migrate_pipe_file
+migrate_pipe_file("watchlist", "watchlist.yaml")
+```
 
-`docker container run -v /tmp:/tmp spongecake-autoreport`
+## Forecasting modes
 
-The output will be similar to above, except Docker doesn't flush `stdout` immediately, so it may take a while before the text is fully displayed.
+| Mode | Where it runs | Deps | Notes |
+|------|----------------|------|-------|
+| `mc` (default) | Anywhere | numpy | Bootstrap of historical log-returns. Always available. |
+| `chronos-local` | Process host | `[chronos]` extra (`torch + chronos-forecasting`) | First run downloads the model. Use `chronos-t5-tiny` on cloud (4GB host). |
+| `chronos-remote` | Routes to a Mac via HTTP | `requests` only on the caller | Requires `spongecake-bridge` running on the Mac (tailscale recommended). Cloud falls back to MC silently if Mac is unreachable. |
 
-## Appendix A - `emailer.py`
+## Output
 
-The `emailer.py` module included used to provide automatic emailing of the report once it had been generated, but the call has since been removed from the `main()` function of the application as it isn't secure.
+- `report.pdf` — A4, table of contents sorted by trend score, one page per stock
+- `index.html` + `<TIDM>.html` — interactive Plotly charts
+- `signals.json` — snapshot used to diff future runs
 
-The module should never be used with your current personal or business email addresses as it requires that the 'Less Secure Apps' option to be enabled on you Gmail account.
+A run also persists state under `./state/`:
+- `state/signals/<YYYY-MM-DD>.json`
+- `state/commentary/<TIDM>/<YYYY-MM-DD>.json` — same-day re-runs are free
 
-It has been left as part of the repo, though, for anyone who wants to put it back. 
+## Deployment
 
-The `emailer.py` requires two environment variables to be set:
+This repo deploys to the Hetzner cloud server (`cloud.hammant.io`) as systemd
+units, alongside the existing hydra trader. See `deploy/` and `Phase 6` of the
+plan at `~/.claude/plans/cool-fork-it-make-zany-cookie.md`.
 
-* `GMAIL_USER=gmail.address.to.send.from@gmail.com`
-* `GMAIL_PASSWORD=password.to.above.gmail.account`
+## Tests
 
+```bash
+uv run pytest -q
+```
+
+Smoke tests stub yfinance — they don't hit the network.
+
+## License
+
+MIT (inherited from upstream).

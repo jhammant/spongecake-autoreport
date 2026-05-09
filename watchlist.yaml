@@ -1,0 +1,101 @@
+# Spongecake-Autoreport watchlist (LSE tickers)
+# tidm: London Stock Exchange mnemonic. yfinance suffix `.L` is added automatically.
+# description: optional — LLM commentary fills it when ANTHROPIC_API_KEY is set.
+
+- tidm: FDEV
+  name: Frontier Developments
+  sector: Tech
+  description: |
+    Frontier Developments plc — UK-based video game developer; Elite Dangerous,
+    Planet Coaster/Zoo, F1 Manager. Self-published franchises and external publisher work.
+
+- tidm: GAW
+  name: Games Workshop
+  sector: Consumer
+  description: |
+    Games Workshop Group PLC designs, manufactures, and sells fantasy miniatures
+    and related products (Warhammer). Trade, retail, mail-order, royalties.
+
+- tidm: KWS
+  name: Keywords Studios
+  sector: Tech
+  description: |
+    Keywords Studios Plc — localization, testing, audio/voiceover, art, customer
+    support services for the games industry.
+
+- tidm: TM17
+  name: Team 17
+  sector: Tech
+  description: |
+    Team 17 Group PLC — UK indie games developer/publisher (Worms, Overcooked,
+    The Escapists). Owned + third-party IP.
+
+- tidm: EMIS
+  name: EMIS Group
+  sector: Healthcare
+  description: |
+    EMIS Group plc — healthcare software for UK GPs and community pharmacy.
+    Primary & Community Care + Community Pharmacy segments.
+
+- tidm: SCT
+  name: Softcat
+  sector: Tech
+  description: |
+    Softcat Plc — UK IT reseller / IT infrastructure solutions provider.
+    Workplace, datacenter, networking, security; corporate + public sector.
+
+- tidm: SPX
+  name: Spirax-Sarco Engineering
+  sector: Industrials
+  description: |
+    Spirax-Sarco Engineering plc — UK industrial engineering. Steam systems
+    (Spirax Sarco), peristaltic pumps (Watson-Marlow), heating (Chromalox).
+
+- tidm: KNOS
+  name: Kainos
+  sector: Tech
+  description: |
+    Kainos Group PLC — UK IT, consulting and software (Workday automated testing,
+    NHS digitization, public-sector custom development).
+
+- tidm: D4T4
+  name: D4T4 Solutions
+  sector: Tech
+  description: |
+    D4t4 Solutions Plc — end-to-end data lifecycle solutions; Celebrus data
+    capture, data management, data analytics, web/mobile development.
+
+- tidm: PAY
+  name: PayPoint
+  sector: Financials
+  description: |
+    PayPoint plc — UK consumer payment / transaction processing; PayPoint One
+    EPoS, MultiPay routing, retail services and bills.
+
+- tidm: IOM
+  name: Iomart
+  sector: Tech
+  description: |
+    iomart Group plc — managed hosting and cloud services. Easyspace SME shared
+    hosting + Cloud Services for SME/corporate via owned datacenters.
+
+- tidm: TUNE
+  name: Focusrite
+  sector: Consumer
+  description: |
+    Focusrite Plc — pro/amateur audio products (Focusrite, Novation), plus
+    third-party brand distribution (KRK, Ableton, sE Electronics).
+
+- tidm: ZOO
+  name: Zoo Digital
+  sector: Tech
+  description: |
+    ZOO Digital Group plc — TV/movie subtitling, captioning, dubbing, digital
+    distribution; cloud platforms ZOOsubs/ZOOcore/ZOOstudio/ZOOdubs.
+
+- tidm: CCC
+  name: Computacenter
+  sector: Tech
+  description: |
+    Computacenter plc — IT infrastructure services across UK/Germany/France/
+    Belgium; advisory, datacenter, networking, workplace, supply chain.
